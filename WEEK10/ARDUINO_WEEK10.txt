@@ -1,0 +1,112 @@
+int X=A0;
+int Y=A1;
+int Xval;
+int Yval;
+int currentMillis;
+unsigned long previousMillis = 0;
+const long interval = 200;
+//20 times a sec?
+void setup() {
+  // put your setup code here, to run once:
+  Serial1.begin(57600);
+  SerialUSB.begin(9600);
+  pinMode(X, INPUT);
+  pinMode(Y, INPUT);
+  while(!Serial1){
+    // wait till connected
+    }
+   establishContact(); // send a byte to establish contact till response
+}
+
+void loop() {
+
+  int ss=0;
+  int buff[7][6];
+  int row,col;
+  // put your main code here, to run repeatedly:
+ 
+   if(Serial1.available()> 0){ // stuck here till you recive something 
+    SerialUSB.write("serial became available\n");
+  int val = Serial1.read();
+  //generate the left side randomly
+  if (val == 100){
+    for ( row = 0; row<7; row++){
+      for ( col = 0; col<6; col++){
+        ss  =random(6);
+        buff[row][col]= (ss%7) + '0' ;
+        }
+
+      }
+    for (row=0;row<7;row++){
+      if (row<6){
+        Serial1.write(buff[row][0]);
+        Serial1.write(buff[row][1]);
+        Serial1.write(buff[row][2]);
+        Serial1.write(buff[row][3]);
+        Serial1.write(buff[row][4]);
+        Serial1.write(buff[row][5]);
+        SerialUSB.write(buff[row][0]);
+        SerialUSB.write(buff[row][1]);
+        SerialUSB.write(buff[row][2]);
+        SerialUSB.write(buff[row][3]);
+        SerialUSB.write(buff[row][4]);
+        SerialUSB.write(buff[row][5]);
+        delayMicroseconds(500);
+    }
+       else{
+       Serial1.write(57);
+       Serial1.write(57);
+       Serial1.write(57);
+       Serial1.write(57);
+       Serial1.write(57);
+       Serial1.write(57);
+       delayMicroseconds(500);
+       }
+      }
+    }
+  //entering joystick commands
+  if ( val == 114){
+     SerialUSB.write("Entered Joystick loop\n");
+     while(1){
+      unsigned long currentMillis = millis();
+        if (currentMillis - previousMillis >= interval) {
+        // save the last time check the signal 
+        previousMillis = currentMillis;
+      Xval=analogRead(X);
+      Yval=analogRead(Y);
+      //still
+      if (Xval > 500 && Xval < 540 && Yval > 490 && Yval < 530) {
+        Serial1.write(200);
+        SerialUSB.write("Joystick isnt moving\n");
+      }
+      //Up
+      else if (Xval > 500 && Xval < 540 && Yval > 520) {
+        Serial1.write(110);
+        SerialUSB.print (" \n Joystick is moving up");
+      }
+      //Down
+      else if (Xval > 500 && Xval < 540 && Yval < 520){
+        Serial1.write(115);
+        SerialUSB.write("Joystick moving down\n");
+      }
+      //Left
+      else if (Yval > 490 && Yval < 530 && Xval < 523) {
+        Serial1.write(101);
+        SerialUSB.write("Joystick moving left\n");
+      }
+      //Right
+      else if (Yval > 490 && Yval < 530 && Xval > 523) {
+        Serial1.write(119);
+        SerialUSB.write("Joystick moving right\n");
+       }
+      }
+     }
+    }
+   }
+}
+void establishContact(){
+  if(Serial1.available()<=0){
+    Serial1.write(68); 
+    delay(2000);
+    }
+  }

@@ -1,0 +1,265 @@
+#include <stdio.h>
+
+ #include "system.h"
+ #include "alt_types.h"
+ #include "altera_avalon_pio_regs.h"
+ #include "altera_up_avalon_rs232.h"
+ #include "bmp_arr.h"
+ #include "altera_up_avalon_video_pixel_buffer_dma.h"
+
+ #define  UART_OK             0
+ #define  UART_ERROR         -1
+ #define  UART_DATA_COUNT     1
+
+// TODO: Delay functions
+ void Delay_Medium   () {volatile int d = 0; for (d = 0; d <  10000; d++) {}}
+
+ int main()
+ {
+  int ii = 0;
+  int x;
+  int y;
+  int xp = 5;
+  int yp = 5;
+  int count = 0;
+
+  alt_up_pixel_buffer_dma_dev* hPB = NULL;
+          hPB = alt_up_pixel_buffer_dma_open_dev (VGA_PIXEL_DMA_NAME);
+          alt_up_pixel_buffer_dma_clear_screen (hPB, 0);
+          alt_up_pixel_buffer_dma_clear_screen (hPB, 1);
+          void Delay_Joypad   () {volatile int d = 0; for (d = 0; d <  40000; d++){}}
+          if (hPB == NULL)
+          {
+              printf ("VGA system missing");
+
+              while (1);
+          }
+
+/*  TODO: UART */
+  int    UART_ER = ~UART_OK;
+  alt_u8 UART_PE = 0;
+  unsigned int UART_FL_RD = 10000;
+  unsigned int UART_FL_WR = 20000;
+
+  alt_u8 UART_BYTE = 0;
+  alt_u8 UART_RD_08 [UART_DATA_COUNT];
+  alt_u8 UART_WR_08 [UART_DATA_COUNT];
+
+/*  TODO: Initialize data buffers */
+  for (ii = 0; ii < UART_DATA_COUNT; ii++)
+  {
+   UART_RD_08 [ii] = 0;
+   UART_WR_08 [ii] = 0;
+  }
+
+/*  TODO: HEX = - = Not initialized */
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX5_BASE, 0x7E);  //  -
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX4_BASE, 0x7E);  //  -
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX3_BASE, 0x7E);  //  -
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX2_BASE, 0x7E);  //  -
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX1_BASE, 0x7E);  //  -
+  IOWR_ALTERA_AVALON_PIO_DATA (HEX0_BASE, 0x7E);  //  -
+
+/*  TODO: Handle of UART */
+  alt_up_rs232_dev* hUART = alt_up_rs232_open_dev (ARDUINO_UART0_NAME);
+
+  if (hUART == NULL)
+  {
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX5_BASE, 0x7E);  //  -
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX4_BASE, 0x7E);  //  -
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX3_BASE, 0x7E);  //  -
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX2_BASE, 0x7E);  //  -
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX1_BASE, 0x7E);  //  -
+   IOWR_ALTERA_AVALON_PIO_DATA (HEX0_BASE, 0x04);  //  U
+
+   while (1);
+  }
+  else
+  {
+   UART_FL_RD = alt_up_rs232_get_used_space_in_read_FIFO (hUART);
+   UART_FL_WR = alt_up_rs232_get_available_space_in_write_FIFO (hUART);
+
+   ///printf ("UART_FL_RD = %u\n", UART_FL_RD);  //  128 bytes = 100%
+   //printf ("UART_FL_WR = %u\n", UART_FL_WR);  //  128 bytes =   0%
+  }
+
+  while (1)
+   {
+ /*   TODO: Work on incoming data */
+
+    UART_FL_RD = alt_up_rs232_get_used_space_in_read_FIFO (hUART);
+
+    if (UART_FL_RD >= UART_DATA_COUNT)
+    {
+      //printf ("UART_FL_RD = %u\n", UART_FL_RD);
+      for (ii = 0; ii < UART_DATA_COUNT; ii++){
+      UART_ER = alt_up_rs232_read_data (hUART, &UART_BYTE, &UART_PE);
+      UART_RD_08 [ii] = UART_BYTE;
+      //printf("%i\n", UART_RD_08[ii]);
+      }
+      for (ii = 0; ii < UART_DATA_COUNT; ii++)
+          {
+      if(UART_RD_08 [ii]== 68){
+    	  alt_up_rs232_write_data (hUART, 0x64);
+
+      }
+      if(UART_RD_08 [ii]==48){
+
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON09[y][x],x+xp,y+yp);
+
+              }
+                  }
+              }
+          if(UART_RD_08 [ii]==49){
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON01[y][x],x+xp,y+yp);
+
+              }
+                  }
+              }
+          if(UART_RD_08 [ii]==50){
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON02[y][x],x+xp,y+yp);
+              }
+                  }
+              }
+          if(UART_RD_08 [ii]==51){
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON07[y][x],x+xp,y+yp);
+              }
+                  }
+              }
+          if(UART_RD_08 [ii]==52){
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON03[y][x],x+xp,y+yp);
+              }
+                  }
+              }
+          if(UART_RD_08 [ii]==53){
+                  for(y=0;y<=32;y++){
+              for(x=0;x<=32;x++){
+              alt_up_pixel_buffer_dma_draw(hPB, ICON08[y][x],x+xp,y+yp);
+              }
+                  }
+              }
+
+          xp=xp+32;
+          if(xp==197){
+         	 xp=5;
+         	 yp=yp+32;
+          }
+          if(yp==197){
+         	 xp=5;
+         	 yp=5;
+         	 count = count+1;
+         	 if (count==5){
+         		 x=5;
+         		 y=5;
+         		alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0xFF,0);
+         		alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0xFF,0);
+         		alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0xFF,0);
+         		alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0xFF,0);
+         		alt_up_rs232_write_data (hUART, 0x72);
+         		 while(1){
+         			UART_FL_RD = alt_up_rs232_get_used_space_in_read_FIFO (hUART);
+         			    if (UART_FL_RD >= UART_DATA_COUNT)
+         			    {
+         			      //printf ("UART_FL_RD = %u\n", UART_FL_RD);
+         			      for (ii = 0; ii < UART_DATA_COUNT; ii++){
+         			      UART_ER = alt_up_rs232_read_data (hUART, &UART_BYTE, &UART_PE);
+         			      UART_RD_08 [ii] = UART_BYTE;
+         			      //printf("%i\n", UART_RD_08[ii]);
+
+
+         			    if(UART_BYTE == 115){
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0x00,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0x00,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0x00,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0x00,0);
+         			    	y=y+32;
+         			    	if(y==197){
+         			    		y=165;
+         			    	}
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0xFF,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0xFF,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0xFF,0);
+         			    	alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0xFF,0);
+         			    }
+         			   if(UART_BYTE == 110){
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0x00,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0x00,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0x00,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0x00,0);
+         			        y=y-32;
+         			        if(y<5){
+         			        	y=5;
+         			        }
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0xFF,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0xFF,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0xFF,0);
+         			        alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0xFF,0);
+         			        }
+         			  if(UART_BYTE == 101){
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0x00,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0x00,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0x00,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0x00,0);
+         			           			    	x=x+32;
+         			           			    	if(x==197){
+         			           			    		x=165;
+         			           			    	}
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0xFF,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0xFF,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0xFF,0);
+         			           			    	alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0xFF,0);
+         			           			    }
+         			           			   if(UART_BYTE == 119){
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0x00,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0x00,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0x00,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0x00,0);
+         			           			        x=x-32;
+         			           			        if(x<5){
+         			           			        	x=5;
+         			           			        }
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x+32,y,0xFF,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y,x,y+32,0xFF,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x,y+32,x+32,y+32,0xFF,0);
+         			           			        alt_up_pixel_buffer_dma_draw_line(hPB,x+32,y,x+32,y+32,0xFF,0);
+         			           			        }
+         			      }
+         			    }
+         			    Delay_Medium ();
+         		 }
+         	 }
+
+          }
+
+
+
+
+      //printf ("UART Incoming = %d\n ", UART_RD_08 [ii]);
+    }
+    }
+    UART_FL_RD = 0;
+
+ /*   TODO: Work on outgoing data */
+
+
+ /*   TODO: Include small delay to avoid too much polling */
+    Delay_Medium ();
+    Delay_Medium ();
+    Delay_Medium ();
+    Delay_Medium ();
+    Delay_Medium ();
+    alt_up_rs232_write_data (hUART, 0x64);
+   }
+
+   return 0;
+  }
